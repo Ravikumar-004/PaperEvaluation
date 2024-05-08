@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+            position: relative; /* Added */
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .create_test {
+            background-color: #008CBA;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            position: absolute; /* Added */
+            top: 50px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+        }
+        .go_home {
+            background-color: #008CBA;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            position: absolute; /* Added */
+            top: 50px; /* Adjust as needed */
+            right: 800px; /* Adjust as needed */
+        }
+        button {
+            background-color: #008CBA;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #005f80;
+        }
+        .view_Btn {
+            background-color: #00A86B;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+        .view_Btn:hover {
+            background-color: green;
+        }
+        .container {
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .item_test {
+            background-color: #f9f9f9;
+            padding: 20px;
+            width: 80%;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item_test p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ user_type }}</h1>
+    <button class="go_home" onclick="window.location.href= '/';">Home</button>
+    {% if user_type == 'Teacher' %}
+        <button class="create_test" onclick="window.location.href= 'create_new_test';">New Test</button>
+    {% endif %}
+    <div class="container">
+        {% for test_key, test_data in tests.items() %}
+            <div class="item_test">
+                <p>{{ test_data['test_title'] }}</p>
+                <div>
+                    {% if user_type == 'Teacher' %}
+                        <button onclick="editTest('{{ test_data['test_title'] }}')">Edit</button>
+                        <button onclick="viewScores('{{ test_data['test_title'] }}')">View Scores</button>
+                        <button onclick="goToSettings('{{ test_data['test_title'] }}')">Settings</button>
+                    {% elif user_type == 'Student' %}
+                        {% if test_data.get('settings', {}).get('enable_scores') == 'on' %}
+                            <button id="upload-{{ loop.index }}" onclick="Upload('{{ test_data['test_title'] }}')">Upload</button>
+                            <button class="view_Btn" onclick="viewScores('{{ test_data['test_title'] }}')">View Score</button>
+                        {% else %}
+                            <button onclick="Upload('{{ test_data['test_title'] }}')">Upload</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function editTest(title) {
+            console.log("Clicked on Edit button for test: " + title);
+            window.location.href = '/RenderQuestions?test_title=' + title;
+        }
+
+        function viewScores(title) {
+            console.log("Clicked on View Scores button for test: " + title);
+            window.location.href = '/viewScore?test_title=' + title;
+        }
+
+        function goToSettings(title) {
+            console.log("Clicked on Settings button for test: " + title);
+            window.location.href = '/RenderSettings?test_title=' + title;
+            // Implement goToSettings functionality here
+        }
+
+        function Upload(title) {
+            console.log("Clicked on Upload button for test: " + title);
+            window.location.href = '/RenderUpload?test_title=' + title;
+            // Implement storeTitle functionality here
+        }
+    </script>
+</body>
+</html>

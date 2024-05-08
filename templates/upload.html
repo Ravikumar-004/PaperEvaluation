@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .cls {
+            display: block;
+            max-width: 75%;
+            margin: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea{
+            display: block;
+            height: 200px;
+            width: 60%;
+            margin: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .ques {
+            display: block;
+            max-width: 75%;
+            margin: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="file"] {
+            width: 25%;
+            display: inline-block;
+            margin-left: 30px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .b {
+            display: inline-block;
+            width: 10%;
+            margin: 10px auto;
+            background-color: #008CBA;
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .b:hover {
+            background-color: #006080;
+        }
+
+        .a {
+            display: block;
+            width: 10%;
+            margin: 10px auto;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Upload Test Data</h1>
+    <form class="cls" id="uploadForm" action="/doneUpload" method="post">
+        <p id="testDetails"></p>
+        <input type="hidden" id="testTitle" name="testTitle" value="">
+        <div id="questionsContainer"></div>
+        <!-- Added a submit button to trigger form submission -->
+        <button type="submit" class="a">DONE</button>
+    </form>
+
+    <script>
+        // Function to fetch and display test details and questions
+        function fetchTestDetails(testTitle) {
+            fetch(`/fetch_test_data?test_title=${testTitle}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Test data:', data);
+                    const testTitle = data.test_title;
+                    const qnsCnt = data.question_count;
+                    const questions = data.questions;
+                    const answers = data.answers;
+    
+                    document.getElementById('testDetails').innerHTML = `Test Title: ${testTitle}<br>`;
+                    
+                    const questionsContainer = document.getElementById('questionsContainer');
+                    questionsContainer.innerHTML = ''; // Clear previous questions
+                    
+                    for (let i = 0; i < qnsCnt; i++) {
+                        const questionNumber = i + 1;
+                        const questionText = questions[i];
+                        const answerText = answers[i];
+    
+                        const questionDiv = document.createElement('div');
+                        questionDiv.innerHTML = `
+                            <p>Question-${questionNumber}: ${questionText}</p>
+                            <input type="file" class="ques" id="file${questionNumber}" name="file${questionNumber}">
+                            <button type="button" class="b" onclick="performOCR(${questionNumber})">Upload</button>
+                            <textarea id="ans${questionNumber}" name="ans${questionNumber}">${answerText}</textarea>
+                            <br>
+                        `;
+                        questionsContainer.appendChild(questionDiv);
+                    }
+                });
+        }
+
+
+        function performOCR(idx) {
+            const fileInput = document.getElementById(`file${idx}`);
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+        
+            fetch('/perform_ocr', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                const ansTextArea = document.getElementById(`ans${idx}`);
+                ansTextArea.textContent = data;
+            })
+            .catch(error => {
+                console.log('Error performing OCR:', error);
+                alert('Failed to perform OCR!');
+            });
+        }
+        
+        
+        function fetchOCRResults() {
+            const fileCount = document.querySelectorAll('[type=file]').length;
+            const ocrResults = {};
+            for (let i = 1; i <= fileCount; i++) {
+                const questionDiv = document.getElementById(`question${i}`);
+                const ocrResult = questionDiv.querySelector('p').textContent.trim();
+                ocrResults[`answer-${i}`] = ocrResult;
+            }
+            return ocrResults;
+        }
+
+        // Call fetchTestDetails function when the page loads
+        window.onload = function() {
+            // Extract test title from query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const testTitle = urlParams.get('test_title');
+            if (testTitle) {
+                document.getElementById('testTitle').value = testTitle;
+                fetchTestDetails(testTitle);
+            }
+        };
+    </script>
+</body>
+</html>

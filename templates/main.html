@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Test</title>
+    <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f0f0f0;
+            }
+    
+            h1 {
+                text-align: center;
+                color: #333;
+            }
+    
+            form {
+                max-width: 75%;
+                margin: 20px auto;
+                padding: 20px;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+    
+            p{
+                display: block;
+                max-width: 75%;
+                margin: auto;
+                padding: 10px;
+                padding-top: 20px;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+    
+            label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+                color: #555;
+            }
+    
+            .TitleField{
+                width: 60%;
+                padding: 8px;
+                margin-left: 30px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+    
+            .TextField{
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+    
+            .question {
+                margin-bottom: 20px;
+            }
+    
+    
+            .button-submit {
+                display: block;
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                margin: auto;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+    
+            .button-submit:hover {
+                background-color: #45a049;
+            }
+    
+            .btn-add {
+                display: block;
+                margin: auto;
+                background-color: #008CBA;
+                padding: 10px 20px;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+    
+            .btn-add:hover {
+                background-color: #006080;
+            }
+        </style>
+    </head>
+    <body>
+    
+        <h1>Edit Test</h1>
+        
+        <form action="/submit" method="post">
+            <!-- Title input -->
+            <p>Paper Title <input type="text" class="TitleField" id="testTitle" name="testTitle" value="{{ test_data.test_title if test_data else request.form['testTitle'] }}">
+            <br>
+            {% if error %}
+                <span style="color: red;">{{ error }}</span>
+            {% endif %}
+            </p>
+            <!-- Questions and answers inputs -->
+            <div id="questionsContainer">
+                {% if test_data %}
+                    <input type="hidden" id="EDIT" name="EDIT" value="{{ "True" }}">
+                    {% for idx, question in enumerate(test_data.questions) %}
+                    <div class="question">
+                        <label for="question{{ idx+1 }}">Question-{{ idx+1 }}:</label>
+                        <input type="text" class="TextField" id="question{{ idx+1 }}" name="question{{ idx+1 }}" value="{{ question }}">
+                        <label for="answer{{ idx+1 }}">Answer-{{ idx+1 }}:</label>
+                        <input type="text" class="TextField" id="answer{{ idx+1 }}" name="answer{{ idx+1 }}" value="{{ test_data.answers[idx] }}">
+                    </div>
+                    {% endfor %}
+                    <!-- Hidden input to track question count -->
+                    <input type="hidden" id="questionCount" name="questionCount" value="{{ test_data.question_count }}">
+                {% else %}
+                    <input type="hidden" id="EDIT" name="EDIT" value="{{ "False" }}">
+
+                    <!-- Default input fields for new test -->
+                    <div class="question">
+                        <label for="question1">Question-1:</label>
+                        <input type="text" class="TextField" id="question1" name="question1" value="{{ request.form['question1'] if 'question1' in request.form else '' }}">
+                        <label for="answer1">Answer-1:</label>
+                        <input type="text" class="TextField" id="answer1" name="answer1" value="{{ request.form['answer1'] if 'answer1' in request.form else '' }}">
+                    </div>
+                    <input type="hidden" id="questionCount" name="questionCount" value="1">
+                {% endif %}
+            </div>
+            <!-- Button to add new question -->
+            <button type="button" class="btn-add" onclick="addQuestion()">Add Question</button>
+            <!-- Button to submit the form -->
+            <button type="submit" class="button-submit">Submit</button>
+        </form>        
+        
+        <script>
+            let questionCount = {{ test_data.question_count if test_data else 1 }};
+            function addQuestion() {
+                questionCount++;
+                const newQuestionDiv = document.createElement('div');
+                newQuestionDiv.className = 'question';
+                newQuestionDiv.innerHTML = `
+                    <label for="question${questionCount}">Question-${questionCount}:</label>
+                    <input type="text" class="TextField" id="question${questionCount}" name="question${questionCount}"><br>
+                    <label for="answer${questionCount}">Answer-${questionCount}:</label>
+                    <input type="text" class="TextField" id="answer${questionCount}" name="answer${questionCount}"><br>
+                `;
+                document.getElementById('questionsContainer').appendChild(newQuestionDiv);
+                document.getElementById('questionCount').value = questionCount;
+            }
+        </script>
+    </body>
+</html>
